@@ -7,6 +7,6 @@ RUN apk --update add unzip curl --no-cache \
 
 
 RUN npm install ghos3 \
-    && mkdir -p ./content/storage \
-    && cp -r ./node_modules/ghos3 ./content/storage/s3
+    && mkdir -p ./content/adapters/storage \
+    && cp -r ./node_modules/ghos3 ./content/adapters/storage/s3
 
