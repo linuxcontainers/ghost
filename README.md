@@ -1,36 +1,70 @@
-# ghost
-A Docker image that runs the Ghost CMS with various modules added in :-
-S3 storage adapter
+# GhoS3
 
-## Intro:
-The official Ghost Docker image, available from [here](https://hub.docker.com/_/ghost), doesn't come with the ability to connect to AWS S3 storage built-in. This Dockerfile installs [ghost-storage-adapter-s3](https://github.com/colinmeinke/ghost-storage-adapter-s3), which allows Ghost to connect to an S3 bucket for storing its `content/` folder. This is especially useful for those building a custom frontend with Ghost as the backend CMS.
+An AWS S3 storage adapter tested on Ghost 5.x.
 
-## Things You Will Need:
-This project uses [Docker](https://docs.docker.com/get-docker/).
+This is a modernized version based on [colinmeinke/ghost-storage-adapter-s3](https://github.com/colinmeinke/ghost-storage-adapter-s3). Major changes are:
 
-You will need an S3 bucket and an IAM user with permissions to use that bucket. Instructions for setting up your S3 bucket and IAM user can be found [here](https://github.com/colinmeinke/ghost-storage-adapter-s3#aws-configuration).
+- Adopted `async`/`await`
+- Rewritten in TypeScript
+- Use latest Version 3 of AWS SDK
 
-## To Use:
-I've put this image up [on Dockerhub](https://hub.docker.com/repository/docker/linuxcontainers/ghost), so you can pull it with: 
-```
-docker pull linuxcontainers/ghost
-```
+It's designed to be a drop-in replacement of colinmeinke's package, so configuration and installation method remained largely the same.
 
-To run from command line:
-```
-docker run -p 2368:2368 \
-  -e storage__active=s3 \
-  -e storage__s3__accessKeyId=<AWS Access Key> \
-  -e storage__s3__secretAccessKey=<AWS Secret Key> \
-  -e storage__s3__bucket=<s3 bucket name> \
-  -e storage__s3__region=us-east-1 \
-  linuxcontainers/ghost:latest
+However, this port pretty much targets only Ghost 5.x and up, as the build toolchain is set to target Node 16.x. With some modifications this should work for older version of Ghost (PRs welcomed).
+
+On my blog [_The Base_](https://base.of.sb), I use [Cloudflare R2](https://www.cloudflare.com/zh-tw/products/r2/) with GhoS3.
+
+## Installation
+
+```bash
+npm install ghos3
+mkdir -p ./content/adapters/storage
+cp -r ./node_modules/ghos3 ./content/adapters/storage/s3
 ```
 
-I've also provided a sample docker-compose for running Ghost with S3 and mysql:
-* Edit `docker-compose.yml` and put in your own values for the AWS IAM user and S3 bucket.
-* Save the changes to `docker-compose.yml` and then run:
-`docker-compose up --build`.
+## Configuration
 
-Getting this working was a little frustrating, so I figured I'd publish the results for everyone's convenience. The problem is that the `ghost-storage-adapter-s3` install instructions specify it neds to be moved to the `content/` directory, but the `storage__active` environment variable tells Ghost to look for that directory in S3, which it can't reach without the adapter! Special thanks to [mason](https://github.com/mason) for figuring out the trick of putting the adapter in the `content.orig/` directory instead:
-https://github.com/docker-library/ghost/issues/195#issuecomment-604754501
+Largely the same, but note `signatureVersion` and `serverSideEncryption` are removed since in AWS SDK v3 they're implemented differently than just a simple string field (PRs welcomed, of course).
+
+```json
+"storage": {
+  "active": "s3",
+  "s3": {
+    "accessKeyId": "YOUR_ACCESS_KEY_ID",
+    "secretAccessKey": "YOUR_SECRET_ACCESS_KEY",
+    "region": "YOUR_REGION_SLUG",
+    "bucket": "YOUR_BUCKET_NAME",
+    "assetHost": "YOUR_OPTIONAL_CDN_URL (See note 1 below)",
+    "pathPrefix": "YOUR_OPTIONAL_BUCKET_SUBDIRECTORY",
+    "endpoint": "YOUR_OPTIONAL_ENDPOINT_URL (only needed for 3rd party S3 providers)",
+    "forcePathStyle": true,
+    "acl": "YOUR_OPTIONAL_ACL (See note 3 below)",
+  }
+}
+```
+
+### Notes
+
+1. Be sure to include `//` or the appropriate protocol within your `assetHost` string/variable to ensure that your site's domain is not prepended to the CDN URL.
+2. If your S3 provider requires path style, you can enable it with `forcePathStyle`.
+3. If you use CloudFront the object ACL does not need to be set to `public-read`.
+
+### Via environment variables
+
+```
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+AWS_DEFAULT_REGION
+GHOST_STORAGE_ADAPTER_S3_PATH_BUCKET
+GHOST_STORAGE_ADAPTER_S3_ASSET_HOST  // optional
+GHOST_STORAGE_ADAPTER_S3_PATH_PREFIX // optional
+GHOST_STORAGE_ADAPTER_S3_ENDPOINT // optional
+GHOST_STORAGE_ADAPTER_S3_FORCE_PATH_STYLE // optional
+GHOST_STORAGE_ADAPTER_S3_ACL // optional
+```
+
+For configuration on the AWS side, colinmeinke's original README has a detailed [tutorial](https://github.com/colinmeinke/ghost-storage-adapter-s3/tree/master#aws-configuration) to set your up.
+
+## License
+
+[ISC](./LICENSE.md)
