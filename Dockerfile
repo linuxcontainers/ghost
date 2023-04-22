@@ -10,7 +10,3 @@ RUN npm install ghos3 \
     && mkdir -p ./content/adapters/storage \
     && cp -r ./node_modules/ghos3 ./content/adapters/storage/s3
 
-EXPOSE 2368
-
-# Start Ghost
-CMD ["npm", "start"]
