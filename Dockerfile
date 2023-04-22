@@ -6,5 +6,5 @@ RUN cp -vr ./node_modules/ghost-storage-adapter-s3 ./current/core/server/adapter
 
 EXPOSE 2368
 
-CMD ["ghost", "start"]
+CMD ["npm", "start"]
 
