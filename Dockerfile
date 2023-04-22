@@ -1,9 +1,9 @@
-FROM ghost:alpine
+FROM ghost:latest
 
 WORKDIR /var/lib/ghost
 
-RUN apk --update add unzip curl --no-cache \
-     && npm install npm@latest -g
+#RUN apk --update add unzip curl --no-cache \
+#     && npm install npm@latest -g
 
 
 RUN npm install ghos3 \
