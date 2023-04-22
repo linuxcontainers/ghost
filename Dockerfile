@@ -1,16 +1,10 @@
 FROM ghost:latest
 
-WORKDIR /var/lib/ghost
+RUN npm install ghost-storage-adapter-s3
 
-#RUN apk --update add unzip curl --no-cache \
-#     && npm install npm@latest -g
-
-
-RUN npm install ghos3 \
-    && mkdir -p ./content/adapters/storage \
-    && cp -r ./node_modules/ghos3 ./content/adapters/storage/s3
+RUN cp -vr ./node_modules/ghost-storage-adapter-s3 ./current/core/server/adapters/storage/s3
 
 EXPOSE 2368
 
-# Start Ghost
-CMD ["npm", "start"]
+CMD ["ghost", "start"]
+
