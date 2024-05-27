@@ -74,6 +74,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: ${DOCKERHUB_IMAGE}
-	  short-description: ${{ github.event.repository.description }}
+          repository: ${{ github.repository }}
+          short-description: ${{ github.event.repository.description }}
 
